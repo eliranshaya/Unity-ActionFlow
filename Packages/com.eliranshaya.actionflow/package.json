@@ -1,6 +1,6 @@
 {
   "name": "com.eliranshaya.actionflow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "ActionFlow",
   "description": "Editor-driven action and animation flow system for Unity.",
   "unity": "2021.3",

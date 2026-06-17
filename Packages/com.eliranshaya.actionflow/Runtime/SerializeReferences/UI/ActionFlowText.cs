@@ -194,11 +194,11 @@ namespace Core
 
         [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("How long each character's full entrance takes (slide + overshoot + settle)")] public float BouncyArcDuration = 0.45f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Where each character flies in from, relative to its final position. Default: from off-screen left.")] public Vector3 BouncyArcStartOffset = new Vector3(-200f, 0f, 0f);
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Where each character flies in from, relative to its final position. Default: from off-screen left.")] public Vector3 BouncyArcStartOffset = new Vector3(-20f, 0f, 0f);
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Height of the arc each character travels along (positive = arc upward, then fall down into place)")] public float BouncyArcHeight = 80f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Height of the arc each character travels along (positive = arc upward, then fall down into place)")] public float BouncyArcHeight = 20f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Starting rotation of each char in degrees. Default tilts forward, untilts as it lands.")] public float BouncyArcStartRotation = -45f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Starting rotation of each char in degrees. Default tilts forward, untilts as it lands.")] public float BouncyArcStartRotation = -90f;
 
         [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Starting scale of each character (0 = invisible point, 1 = full size)")] [Range(0f, 1f)] public float BouncyArcStartScale = 0f;
 
