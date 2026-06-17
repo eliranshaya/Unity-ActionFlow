@@ -1,0 +1,18 @@
+{
+    "name": "Core.ActionFlow.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1ddd6349b3ef6ed43b4095b15e89bfda"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
