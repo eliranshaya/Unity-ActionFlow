@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -54,11 +55,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (TargetParticle == null)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             switch (Action)
@@ -82,6 +83,8 @@ namespace Core
                     TargetParticle.Play(WithChildren);
                     break;
             }
+
+            return UniTask.CompletedTask;
         }
     }
 }

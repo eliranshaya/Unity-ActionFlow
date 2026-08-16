@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -38,11 +39,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (Targets == null || Targets.Length == 0)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             foreach (var target in Targets)
@@ -54,6 +55,8 @@ namespace Core
 
                 UnityEngine.Object.Destroy(target);
             }
+
+            return UniTask.CompletedTask;
         }
     }
 }

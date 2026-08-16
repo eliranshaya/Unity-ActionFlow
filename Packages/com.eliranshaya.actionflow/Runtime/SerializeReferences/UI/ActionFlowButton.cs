@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -51,11 +52,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (ButtonHelpers == null || ButtonHelpers.Length == 0)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             foreach (var helper in ButtonHelpers)
@@ -81,7 +82,7 @@ namespace Core
                 }
             }
 
-            yield break;
+            return UniTask.CompletedTask;
         }
     }
 }

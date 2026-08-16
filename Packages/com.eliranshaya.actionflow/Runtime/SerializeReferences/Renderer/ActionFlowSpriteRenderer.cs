@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -65,30 +66,30 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetRenderer == null) yield break;
+            if (TargetRenderer == null) return UniTask.CompletedTask;
 
             switch (AnimationMode)
             {
-                case SpriteAnimationMode.SetColor: yield return DoSetColor(); break;
-                case SpriteAnimationMode.LerpColor: yield return DoLerpColor(); break;
-                case SpriteAnimationMode.SetAlpha: yield return DoSetAlpha(); break;
-                case SpriteAnimationMode.LerpAlpha: yield return DoLerpAlpha(); break;
+                case SpriteAnimationMode.SetColor: DoSetColor(); break;
+                case SpriteAnimationMode.LerpColor: return DoLerpColor(cancellationToken);
+                case SpriteAnimationMode.SetAlpha: DoSetAlpha(); break;
+                case SpriteAnimationMode.LerpAlpha: return DoLerpAlpha(cancellationToken);
             }
+
+            return UniTask.CompletedTask;
         }
 
-        private IEnumerator DoSetColor()
+        private void DoSetColor()
         {
             Color original = TargetRenderer.color;
             TargetRenderer.color = ColorValue;
 
             if (RestoreOnComplete) TargetRenderer.color = original;
-
-            yield break;
         }
 
-        private IEnumerator DoSetAlpha()
+        private void DoSetAlpha()
         {
             Color original = TargetRenderer.color;
 
@@ -97,11 +98,9 @@ namespace Core
             TargetRenderer.color = c;
 
             if (RestoreOnComplete) TargetRenderer.color = original;
-
-            yield break;
         }
 
-        private IEnumerator DoLerpColor()
+        private async UniTask DoLerpColor(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -115,13 +114,13 @@ namespace Core
                 TargetRenderer.color = Color.LerpUnclamped(ColorFrom, ColorTo, curvedT);
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetRenderer.color = RestoreOnComplete ? original : Color.LerpUnclamped(ColorFrom, ColorTo, ColorCurve.Evaluate(1f));
         }
 
-        private IEnumerator DoLerpAlpha()
+        private async UniTask DoLerpAlpha(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -137,7 +136,7 @@ namespace Core
                 TargetRenderer.color = working;
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             if (RestoreOnComplete)

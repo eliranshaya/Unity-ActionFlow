@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -131,11 +132,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override async UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (TargetText == null)
             {
-                yield break;
+                return;
             }
 
             float duration = DurationMode.GetDuration();
@@ -157,7 +158,7 @@ namespace Core
             if (duration <= 0f)
             {
                 setText(ToValue);
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -175,7 +176,7 @@ namespace Core
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             setText(ToValue);
@@ -349,35 +350,22 @@ namespace Core
             }
         }
 
+        // Note: unlike ActionFlowText, the per-frame ForceMeshUpdate in the effects above cannot be
+        // replaced by a cached base pose — the counter rewrites the text every frame, so the layout
+        // genuinely changes and has to be regenerated. Only the push side is batched here.
         private void PushMeshUpdate()
         {
-            var textInfo = TargetText.textInfo;
-            for (int i = 0; i < textInfo.meshInfo.Length; i++)
-            {
-                textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-            }
+            TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
         }
 
         private void PushColorUpdate()
         {
-            var textInfo = TargetText.textInfo;
-            for (int i = 0; i < textInfo.meshInfo.Length; i++)
-            {
-                textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-            }
+            TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
         }
 
         private void PushMeshAndColorUpdate()
         {
-            var textInfo = TargetText.textInfo;
-            for (int i = 0; i < textInfo.meshInfo.Length; i++)
-            {
-                textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-            }
+            TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
         }
     }
 }

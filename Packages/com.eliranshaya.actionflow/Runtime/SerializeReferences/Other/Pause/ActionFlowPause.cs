@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -62,7 +63,7 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             float actualDuration = PauseDuration;
             if (RandomizePauseDuration)
@@ -82,7 +83,7 @@ namespace Core
                 }
             }
 
-            yield return WaitForDuration(actualDuration);
+            return WaitForDuration(actualDuration, cancellationToken);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -28,7 +29,7 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
 #if UNITY_EDITOR
             if (EditorOnly || !Application.isPlaying)
@@ -42,7 +43,7 @@ namespace Core
                 Debug.Log($"<color=yellow>⏸ Break Point (Runtime): {BreakLabel}</color>");
             }
 #endif
-            yield break;
+            return UniTask.CompletedTask;
         }
     }
 }

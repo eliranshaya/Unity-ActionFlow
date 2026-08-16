@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -43,39 +44,67 @@ namespace Core
         })]
         public DurationMode DurationMode;
 
-        [InspectorGroup("Text", 12, false)] [Tooltip("The TextMeshPro component to animate")] public TMP_Text TargetText;
+        [InspectorGroup("Text", 12, false)]
+        [Tooltip("The TextMeshPro component to animate")]
+        public TMP_Text TargetText;
 
         [Condition("AnimationMode", new[]
         {
             "Typewriter",
             "TypewriterWithPunch"
         })]
-        [Tooltip("If true, uses the text fields below. If false, uses the current text already in the TextMeshPro component.")]
+        [Tooltip(
+            "If true, uses the text fields below. If false, uses the current text already in the TextMeshPro component.")]
         public bool ReplaceText = true;
 
-        [Tooltip("The animation mode to use on the text")] public TextAnimationMode AnimationMode = TextAnimationMode.Typewriter;
+        [Tooltip("The animation mode to use on the text")]
+        public TextAnimationMode AnimationMode = TextAnimationMode.Typewriter;
 
-        [Condition("ReplaceText", "AnimationMode", "Typewriter")] [Tooltip("The full text to reveal character by character")] public string TypewriterText = "Hello World";
+        [Condition("ReplaceText", "AnimationMode", "Typewriter")]
+        [Tooltip("The full text to reveal character by character")]
+        public string TypewriterText = "Hello World";
 
-        [Condition("AnimationMode", "Typewriter")] [Tooltip("If true, clears the text before starting the typewriter effect")] public bool ClearOnStart = true;
+        [Condition("AnimationMode", "Typewriter")]
+        [Tooltip("If true, clears the text before starting the typewriter effect")]
+        public bool ClearOnStart = true;
 
-        [Condition("AnimationMode", "FadeIn")] [Tooltip("The alpha value to start from (0 = fully transparent)")] [Range(0f, 1f)] public float FadeFromAlpha = 0f;
+        [Condition("AnimationMode", "FadeIn")]
+        [Tooltip("The alpha value to start from (0 = fully transparent)")]
+        [Range(0f, 1f)]
+        public float FadeFromAlpha = 0f;
 
-        [Condition("AnimationMode", "FadeIn")] [Tooltip("The alpha value to end at (1 = fully opaque)")] [Range(0f, 1f)] public float FadeToAlpha = 1f;
+        [Condition("AnimationMode", "FadeIn")]
+        [Tooltip("The alpha value to end at (1 = fully opaque)")]
+        [Range(0f, 1f)]
+        public float FadeToAlpha = 1f;
 
-        [Condition("AnimationMode", "ColorChange")] [Tooltip("The color to animate from")] public Color FromColor = Color.white;
+        [Condition("AnimationMode", "ColorChange")]
+        [Tooltip("The color to animate from")]
+        public Color FromColor = Color.white;
 
-        [Condition("AnimationMode", "ColorChange")] [Tooltip("The color to animate to")] public Color ToColor = Color.red;
+        [Condition("AnimationMode", "ColorChange")]
+        [Tooltip("The color to animate to")]
+        public Color ToColor = Color.red;
 
-        [Condition("ReplaceText", "AnimationMode", "TypewriterWithPunch")] [Tooltip("The full text to reveal character by character with a size punch per character")] public string TypewriterPunchText = "Hello World";
+        [Condition("ReplaceText", "AnimationMode", "TypewriterWithPunch")]
+        [Tooltip("The full text to reveal character by character with a size punch per character")]
+        public string TypewriterPunchText = "Hello World";
 
-        [Condition("AnimationMode", "TypewriterWithPunch")] [Tooltip("If true, clears the text before starting")] public bool PunchClearOnStart = true;
+        [Condition("AnimationMode", "TypewriterWithPunch")]
+        [Tooltip("If true, clears the text before starting")]
+        public bool PunchClearOnStart = true;
 
-        [Condition("AnimationMode", "TypewriterWithPunch")] [Tooltip("The font size multiplier at the peak of the punch (e.g. 1.5 = 150% of normal size)")] public float PunchSizeMultiplier = 1.5f;
+        [Condition("AnimationMode", "TypewriterWithPunch")]
+        [Tooltip("The font size multiplier at the peak of the punch (e.g. 1.5 = 150% of normal size)")]
+        public float PunchSizeMultiplier = 1.5f;
 
-        [Condition("AnimationMode", "TypewriterWithPunch")] [Tooltip("How long each character's punch animation takes in seconds")] public float PunchDurationPerChar = 0.1f;
+        [Condition("AnimationMode", "TypewriterWithPunch")]
+        [Tooltip("How long each character's punch animation takes in seconds")]
+        public float PunchDurationPerChar = 0.1f;
 
-        [Condition("AnimationMode", "TypewriterWithPunch")] [Tooltip("Delay between each character appearing")] public float DelayBetweenChars = 0.05f;
+        [Condition("AnimationMode", "TypewriterWithPunch")]
+        [Tooltip("Delay between each character appearing")]
+        public float DelayBetweenChars = 0.05f;
 
         [Condition("AnimationMode", new[]
         {
@@ -101,21 +130,38 @@ namespace Core
         [Tooltip("Distance between each character's wave offset")]
         public float WaveFrequency = 1f;
 
-        [Condition("AnimationMode", "Shake")] [Tooltip("How far each character shakes in pixels")] public float ShakeIntensity = 3f;
+        [Condition("AnimationMode", "Shake")]
+        [Tooltip("How far each character shakes in pixels")]
+        public float ShakeIntensity = 3f;
 
-        [Condition("AnimationMode", "Rainbow")] [Tooltip("How fast the colors cycle")] public float RainbowSpeed = 1f;
+        [Condition("AnimationMode", "Rainbow")]
+        [Tooltip("How fast the colors cycle")]
+        public float RainbowSpeed = 1f;
 
-        [Condition("AnimationMode", "Rainbow")] [Tooltip("Offset between each character's color")] public float RainbowFrequency = 0.2f;
+        [Condition("AnimationMode", "Rainbow")]
+        [Tooltip("Offset between each character's color")]
+        public float RainbowFrequency = 0.2f;
 
-        [Condition("AnimationMode", "Glitch")] [Tooltip("How far glitched characters offset in pixels")] public float GlitchIntensity = 8f;
+        [Condition("AnimationMode", "Glitch")]
+        [Tooltip("How far glitched characters offset in pixels")]
+        public float GlitchIntensity = 8f;
 
-        [Condition("AnimationMode", "Glitch")] [Tooltip("Chance per character per frame to glitch (0-1)")] [Range(0f, 1f)] public float GlitchChance = 0.1f;
+        [Condition("AnimationMode", "Glitch")]
+        [Tooltip("Chance per character per frame to glitch (0-1)")]
+        [Range(0f, 1f)]
+        public float GlitchChance = 0.1f;
 
-        [Condition("AnimationMode", "Glitch")] [Tooltip("Whether to also randomize color on glitched characters")] public bool GlitchColor = true;
+        [Condition("AnimationMode", "Glitch")]
+        [Tooltip("Whether to also randomize color on glitched characters")]
+        public bool GlitchColor = true;
 
-        [Condition("AnimationMode", "FadeInPerChar")] [Tooltip("Delay between each character starting to fade in")] public float FadePerCharDelay = 0.05f;
+        [Condition("AnimationMode", "FadeInPerChar")]
+        [Tooltip("Delay between each character starting to fade in")]
+        public float FadePerCharDelay = 0.05f;
 
-        [Condition("AnimationMode", "FadeInPerChar")] [Tooltip("How long each individual character takes to fade in")] public float FadePerCharDuration = 0.2f;
+        [Condition("AnimationMode", "FadeInPerChar")]
+        [Tooltip("How long each individual character takes to fade in")]
+        public float FadePerCharDuration = 0.2f;
 
         [Condition("AnimationMode", new[]
         {
@@ -151,67 +197,119 @@ namespace Core
             "SlideInPerCharAndCurve"
         })]
         [Tooltip("Curve controlling the slide easing")]
-        public AnimationCurve SlidePerCharCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.7f, 1.1f), new Keyframe(1f, 1f));
+        public AnimationCurve SlidePerCharCurve =
+            new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.7f, 1.1f), new Keyframe(1f, 1f));
 
-        [Condition("AnimationMode", "SlideInPerCharAndCurve")] [Tooltip("The arch shape of the text. X = position along text (0 = first char, 1 = last char). Y = vertical offset multiplier. Default is a rainbow arc.")]
-        public AnimationCurve TextArchCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 1f), new Keyframe(1f, 0f));
+        [Condition("AnimationMode", "SlideInPerCharAndCurve")]
+        [Tooltip(
+            "The arch shape of the text. X = position along text (0 = first char, 1 = last char). Y = vertical offset multiplier. Default is a rainbow arc.")]
+        public AnimationCurve TextArchCurve =
+            new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 1f), new Keyframe(1f, 0f));
 
-        [Condition("AnimationMode", "SlideInPerCharAndCurve")] [Tooltip("Maximum height of the arch in pixels (multiplied by the curve value)")] public float ArchHeight = 30f;
+        [Condition("AnimationMode", "SlideInPerCharAndCurve")]
+        [Tooltip("Maximum height of the arch in pixels (multiplied by the curve value)")]
+        public float ArchHeight = 30f;
 
-        [Condition("AnimationMode", "SlideInPerCharAndCurve")] [Tooltip("If true, each character rotates to follow the slope of the arch (tilts toward the peak)")] public bool RotateAlongArch = true;
+        [Condition("AnimationMode", "SlideInPerCharAndCurve")]
+        [Tooltip("If true, each character rotates to follow the slope of the arch (tilts toward the peak)")]
+        public bool RotateAlongArch = true;
 
-        [Condition("AnimationMode", "SlideInPerCharAndCurve")] [Tooltip("Multiplier on the rotation. 1 = natural slope angle, increase for more dramatic tilt, negative to invert.")] public float RotationStrength = 1f;
+        [Condition("AnimationMode", "SlideInPerCharAndCurve")]
+        [Tooltip(
+            "Multiplier on the rotation. 1 = natural slope angle, increase for more dramatic tilt, negative to invert.")]
+        public float RotationStrength = 1f;
         // ============================================================
         //  SlideInPerCharCartoonArc — like the "WELL DONE!" video
         // ============================================================
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Delay between each letter starting")] public float CartoonArcDelay = 0.08f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Delay between each letter starting")]
+        public float CartoonArcDelay = 0.08f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Duration of one letter entrance")] public float CartoonArcDuration = 0.55f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Duration of one letter entrance")]
+        public float CartoonArcDuration = 0.55f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Where letters fly from, relative to final position")] public Vector3 CartoonArcStartOffset = new Vector3(-260f, -40f, 0f);
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Where letters fly from, relative to final position")]
+        public Vector3 CartoonArcStartOffset = new Vector3(-260f, -40f, 0f);
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Extra height of the flying arc")] public float CartoonArcTravelHeight = 110f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Extra height of the flying arc")]
+        public float CartoonArcTravelHeight = 110f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Final curve height of the word")] public float CartoonArcFinalHeight = 28f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Final curve height of the word")]
+        public float CartoonArcFinalHeight = 28f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Final word arc shape")] public AnimationCurve CartoonArcFinalCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 1f), new Keyframe(1f, 0f));
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Final word arc shape")]
+        public AnimationCurve CartoonArcFinalCurve =
+            new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 1f), new Keyframe(1f, 0f));
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("Starting rotation of each letter")] public float CartoonArcStartRotation = -55f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("Starting rotation of each letter")]
+        public float CartoonArcStartRotation = -55f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Tooltip("How much letters rotate along final arc")] public float CartoonArcRotationStrength = 1.15f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Tooltip("How much letters rotate along final arc")]
+        public float CartoonArcRotationStrength = 1.15f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] [Range(0f, 1f)] public float CartoonArcStartScale = 0.15f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        [Range(0f, 1f)]
+        public float CartoonArcStartScale = 0.15f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] public float CartoonArcOvershootScale = 1.22f;
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        public float CartoonArcOvershootScale = 1.22f;
 
-        [Condition("AnimationMode", "SlideInPerCharCartoonArc")] public Vector2 CartoonArcSquash = new Vector2(1.18f, 0.86f);
+        [Condition("AnimationMode", "SlideInPerCharCartoonArc")]
+        public Vector2 CartoonArcSquash = new Vector2(1.18f, 0.86f);
         // ============================================================
         //  SlideInPerCharBouncyArc — juicy mobile-game style entrance
         // ============================================================
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Delay between each character starting its entrance")] public float BouncyArcDelay = 0.07f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip("Delay between each character starting its entrance")]
+        public float BouncyArcDelay = 0.07f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("How long each character's full entrance takes (slide + overshoot + settle)")] public float BouncyArcDuration = 0.45f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip("How long each character's full entrance takes (slide + overshoot + settle)")]
+        public float BouncyArcDuration = 0.45f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Where each character flies in from, relative to its final position. Default: from off-screen left.")] public Vector3 BouncyArcStartOffset = new Vector3(-20f, 0f, 0f);
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip("Where each character flies in from, relative to its final position. Default: from off-screen left.")]
+        public Vector3 BouncyArcStartOffset = new Vector3(-20f, 0f, 0f);
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Height of the arc each character travels along (positive = arc upward, then fall down into place)")] public float BouncyArcHeight = 20f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip("Height of the arc each character travels along (positive = arc upward, then fall down into place)")]
+        public float BouncyArcHeight = 20f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Starting rotation of each char in degrees. Default tilts forward, untilts as it lands.")] public float BouncyArcStartRotation = -90f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip("Starting rotation of each char in degrees. Default tilts forward, untilts as it lands.")]
+        public float BouncyArcStartRotation = -90f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Starting scale of each character (0 = invisible point, 1 = full size)")] [Range(0f, 1f)] public float BouncyArcStartScale = 0f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip("Starting scale of each character (0 = invisible point, 1 = full size)")]
+        [Range(0f, 1f)]
+        public float BouncyArcStartScale = 0f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Peak overshoot scale at landing (e.g. 1.3 = grows 30% larger then settles back). Creates the squash-and-stretch impact feel.")] public float BouncyArcOvershootScale = 1.3f;
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip(
+            "Peak overshoot scale at landing (e.g. 1.3 = grows 30% larger then settles back). Creates the squash-and-stretch impact feel.")]
+        public float BouncyArcOvershootScale = 1.3f;
 
-        [Condition("AnimationMode", "SlideInPerCharBouncyArc")] [Tooltip("Squash factor at impact: X stretches wider, Y squashes shorter. (1,1) = no squash. (1.2, 0.85) = classic juicy squash.")] public Vector2 BouncyArcSquash = new Vector2(1.2f, 0.85f);
+        [Condition("AnimationMode", "SlideInPerCharBouncyArc")]
+        [Tooltip(
+            "Squash factor at impact: X stretches wider, Y squashes shorter. (1,1) = no squash. (1.2, 0.85) = classic juicy squash.")]
+        public Vector2 BouncyArcSquash = new Vector2(1.2f, 0.85f);
 
         #endregion
 
         public override float GetDuration() => Timing.WaitForCompletion ? DurationMode.GetDurationUI() : 0;
 #if UNITY_EDITOR
 
-        public override string GetDescription() => "Animate a TextMeshPro component with various effects including typewriter, fade, color change, scale punch, and slide in";
+        public override string GetDescription() =>
+            "Animate a TextMeshPro component with various effects including typewriter, fade, color change, scale punch, and slide in";
 
         public override string GetCategory() => "UI";
 
@@ -219,9 +317,11 @@ namespace Core
         {
             if (TargetText == null) return "⚠ Text Target is not assigned. Please assign a TextMeshProUGUI component.";
 
-            if (AnimationMode == TextAnimationMode.EmptyText && string.IsNullOrEmpty(TargetText.text)) return "⚠ EmptyText mode requires existing text in the TargetText component.";
+            if (AnimationMode == TextAnimationMode.EmptyText && string.IsNullOrEmpty(TargetText.text))
+                return "⚠ EmptyText mode requires existing text in the TargetText component.";
 
-            if (AnimationMode == ActionFlowText.TextAnimationMode.Typewriter && string.IsNullOrEmpty(TypewriterText)) return "⚠ Typewriter Text is empty. Please enter the text to reveal.";
+            if (AnimationMode == ActionFlowText.TextAnimationMode.Typewriter && string.IsNullOrEmpty(TypewriterText))
+                return "⚠ Typewriter Text is empty. Please enter the text to reveal.";
 
             return null;
         }
@@ -235,67 +335,54 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetText == null) yield break;
+            if (TargetText == null) return UniTask.CompletedTask;
 
             switch (AnimationMode)
             {
                 case TextAnimationMode.Typewriter:
-                    yield return DoTypewriter();
-                    break;
+                    return DoTypewriter(cancellationToken);
                 case TextAnimationMode.FadeIn:
-                    yield return DoFadeIn();
-                    break;
+                    return DoFadeIn(cancellationToken);
                 case TextAnimationMode.ColorChange:
-                    yield return DoColorChange();
-                    break;
+                    return DoColorChange(cancellationToken);
                 case TextAnimationMode.TypewriterWithPunch:
-                    yield return DoTypewriterWithPunch();
-                    break;
+                    return DoTypewriterWithPunch(cancellationToken);
                 case TextAnimationMode.Wave:
-                    yield return DoWave();
-                    break;
+                    return DoWave(cancellationToken);
                 case TextAnimationMode.Shake:
-                    yield return DoShake();
-                    break;
+                    return DoShake(cancellationToken);
                 case TextAnimationMode.Rainbow:
-                    yield return DoRainbow();
-                    break;
+                    return DoRainbow(cancellationToken);
                 case TextAnimationMode.Glitch:
-                    yield return DoGlitch();
-                    break;
+                    return DoGlitch(cancellationToken);
                 case TextAnimationMode.FadeInPerChar:
-                    yield return DoFadeInPerChar();
-                    break;
+                    return DoFadeInPerChar(cancellationToken);
                 case TextAnimationMode.SlideInPerChar:
-                    yield return DoSlideInPerChar();
-                    break;
+                    return DoSlideInPerChar(cancellationToken);
                 case TextAnimationMode.EmptyText:
-                    yield return DoEmptyText();
+                    DoEmptyText();
                     break;
                 case TextAnimationMode.SlideInPerCharAndWave:
-                    yield return DoSlideInPerCharAndWave();
-                    break;
+                    return DoSlideInPerCharAndWave(cancellationToken);
                 case TextAnimationMode.SlideInPerCharAndCurve:
-                    yield return DoSlideInPerCharAndCurve();
-                    break;
+                    return DoSlideInPerCharAndCurve(cancellationToken);
                 case TextAnimationMode.SlideInPerCharBouncyArc:
-                    yield return DoSlideInPerCharBouncyArc();
-                    break;
+                    return DoSlideInPerCharBouncyArc(cancellationToken);
                 case TextAnimationMode.SlideInPerCharCartoonArc:
-                    yield return DoSlideInPerCharCartoonArc();
-                    break;
+                    return DoSlideInPerCharCartoonArc(cancellationToken);
             }
+
+            return UniTask.CompletedTask;
         }
 
-        private IEnumerator DoEmptyText()
+        private void DoEmptyText()
         {
             TargetText.text = "";
-            yield break;
         }
 
-        private IEnumerator DoTypewriter()
+        private async UniTask DoTypewriter(CancellationToken cancellationToken)
         {
             string full = ReplaceText ? TypewriterText : TargetText.text;
 
@@ -304,11 +391,7 @@ namespace Core
             float duration = DurationMode.GetDuration();
             float delay = duration / Mathf.Max(full.Length, 1);
 
-            object waitFor = new WaitForSeconds(delay);
-            if (Timing.TimeMode == ActionFlowTiming.UpdateMode.UnscaledUpdate)
-            {
-                waitFor = new WaitForSecondsRealtime(delay);
-            }
+            TimeSpan delaySpan = TimeSpan.FromSeconds(delay);
 
             for (int i = 0; i <= full.Length; i++)
             {
@@ -316,11 +399,11 @@ namespace Core
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
-                yield return waitFor;
+                await UniTask.Delay(delaySpan, DelayMode, LoopTiming, cancellationToken);
             }
         }
 
-        private IEnumerator DoFadeIn()
+        private async UniTask DoFadeIn(CancellationToken cancellationToken)
         {
             Color c = TargetText.color;
             float duration = DurationMode.GetDuration();
@@ -328,7 +411,7 @@ namespace Core
             {
                 c.a = FadeToAlpha;
                 TargetText.color = c;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -344,7 +427,7 @@ namespace Core
 #endif
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             c.a = FadeToAlpha;
@@ -354,7 +437,7 @@ namespace Core
 #endif
         }
 
-        private IEnumerator DoColorChange()
+        private async UniTask DoColorChange(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -368,7 +451,7 @@ namespace Core
 #endif
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetText.color = ToColor;
@@ -377,7 +460,7 @@ namespace Core
 #endif
         }
 
-        private IEnumerator DoTypewriterWithPunch()
+        private async UniTask DoTypewriterWithPunch(CancellationToken cancellationToken)
         {
             string full = ReplaceText ? TypewriterPunchText : TargetText.text;
 
@@ -386,77 +469,124 @@ namespace Core
             float originalSize = TargetText.fontSize;
             float punchSize = originalSize * PunchSizeMultiplier;
 
-            float[] charSizes = new float[full.Length];
-            bool[] charVisible = new bool[full.Length];
-
-            for (int i = 0; i < full.Length; i++)
-            {
-                charSizes[i] = 0f;
-                charVisible[i] = false;
-            }
+            int charCount = full.Length;
+            float[] charSizes = new float[charCount];
+            bool[] charVisible = new bool[charCount];
+            float[] charElapsed = new float[charCount];
 
             TargetText.text = full;
-            TargetText.ForceMeshUpdate();
+            CaptureBaseMesh();
 
-            var activeCoroutines = new System.Collections.Generic.List<IEnumerator>();
+            // Each character starts its punch at index * DelayBetweenChars and eases from
+            // punchSize back to originalSize over PunchDurationPerChar. Driving that from a flat
+            // timeline replaces the old nested-coroutine scheduler with zero per-character allocation.
+            float totalElapsed = 0f;
+            float totalDuration = DelayBetweenChars * charCount + PunchDurationPerChar;
 
-            IEnumerator PunchChar(int index)
+            while (totalElapsed < totalDuration)
             {
-                charVisible[index] = true;
-                charSizes[index] = punchSize;
-
-                float elapsed = 0f;
-                while (elapsed < PunchDurationPerChar)
+                for (int i = 0; i < charCount; i++)
                 {
-                    float t = Mathf.Clamp01(elapsed / PunchDurationPerChar);
-                    charSizes[index] = Mathf.LerpUnclamped(punchSize, originalSize, t);
-                    elapsed += DeltaTime();
-                    yield return YieldInstruction;
-                }
-
-                charSizes[index] = originalSize;
-            }
-
-            for (int i = 0; i < full.Length; i++)
-            {
-                activeCoroutines.Add(PunchChar(i));
-
-                float waitElapsed = 0f;
-                while (waitElapsed < DelayBetweenChars)
-                {
-                    for (int c = activeCoroutines.Count - 1; c >= 0; c--)
+                    if (totalElapsed < i * DelayBetweenChars)
                     {
-                        if (!activeCoroutines[c].MoveNext()) activeCoroutines.RemoveAt(c);
+                        continue;
                     }
 
-                    ApplyCharSizes(charSizes, charVisible);
-#if UNITY_EDITOR
-                    if (!Application.isPlaying) MarkDirty();
-#endif
-                    waitElapsed += DeltaTime();
-                    yield return YieldInstruction;
-                }
-            }
+                    if (!charVisible[i])
+                    {
+                        charVisible[i] = true;
+                        charSizes[i] = punchSize;
+                    }
 
-            while (activeCoroutines.Count > 0)
-            {
-                for (int c = activeCoroutines.Count - 1; c >= 0; c--)
-                {
-                    if (!activeCoroutines[c].MoveNext()) activeCoroutines.RemoveAt(c);
+                    float t = Mathf.Clamp01(charElapsed[i] / PunchDurationPerChar);
+                    charSizes[i] = Mathf.LerpUnclamped(punchSize, originalSize, t);
+
+                    if (charElapsed[i] < PunchDurationPerChar)
+                    {
+                        charElapsed[i] += DeltaTime();
+                    }
                 }
 
                 ApplyCharSizes(charSizes, charVisible);
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
-                yield return YieldInstruction;
+                totalElapsed += DeltaTime();
+                await NextFrame(cancellationToken);
             }
         }
 
-        private void ApplyCharSizes(float[] charSizes, bool[] charVisible)
+        #region Vertex animation plumbing
+
+        private TMP_MeshInfo[] _baseMeshInfo;
+        private int _baseCharacterCount;
+
+        /// <summary>
+        /// Lays the text out once and snapshots the un-animated vertex data.
+        /// Per-frame effects restore from this snapshot instead of re-running ForceMeshUpdate,
+        /// which would re-parse, re-layout and re-generate the whole mesh every single frame.
+        /// </summary>
+        private TMP_TextInfo CaptureBaseMesh()
         {
             TargetText.ForceMeshUpdate();
-            var textInfo = TargetText.textInfo;
+
+            TMP_TextInfo textInfo = TargetText.textInfo;
+            _baseMeshInfo = textInfo.CopyMeshInfoVertexData();
+            _baseCharacterCount = textInfo.characterCount;
+
+            return textInfo;
+        }
+
+        /// <summary>
+        /// Resets the live vertex data back to the snapshot — the job the per-frame
+        /// ForceMeshUpdate used to do — so this frame's offsets apply to the base pose.
+        /// Only the arrays named by <paramref name="flags"/> are restored.
+        /// </summary>
+        private TMP_TextInfo RestoreBaseMesh(TMP_VertexDataUpdateFlags flags)
+        {
+            TMP_TextInfo textInfo = TargetText.textInfo;
+
+            // The text changed under us, so the snapshot no longer describes it.
+            if (_baseMeshInfo == null || TargetText.havePropertiesChanged || textInfo.characterCount != _baseCharacterCount)
+            {
+                return CaptureBaseMesh();
+            }
+
+            bool restoreVertices = (flags & TMP_VertexDataUpdateFlags.Vertices) != 0;
+            bool restoreColors = (flags & TMP_VertexDataUpdateFlags.Colors32) != 0;
+
+            int meshCount = Mathf.Min(textInfo.meshInfo.Length, _baseMeshInfo.Length);
+            for (int i = 0; i < meshCount; i++)
+            {
+                if (restoreVertices)
+                {
+                    Vector3[] source = _baseMeshInfo[i].vertices;
+                    Vector3[] destination = textInfo.meshInfo[i].vertices;
+                    if (source != null && destination != null && source.Length == destination.Length)
+                    {
+                        Array.Copy(source, destination, source.Length);
+                    }
+                }
+
+                if (restoreColors)
+                {
+                    Color32[] source = _baseMeshInfo[i].colors32;
+                    Color32[] destination = textInfo.meshInfo[i].colors32;
+                    if (source != null && destination != null && source.Length == destination.Length)
+                    {
+                        Array.Copy(source, destination, source.Length);
+                    }
+                }
+            }
+
+            return textInfo;
+        }
+
+        #endregion
+
+        private void ApplyCharSizes(float[] charSizes, bool[] charVisible)
+        {
+            var textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.Vertices);
 
             for (int i = 0; i < charSizes.Length && i < textInfo.characterCount; i++)
             {
@@ -477,7 +607,8 @@ namespace Core
                     continue;
                 }
 
-                Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] + verts[vertexIndex + 3]) / 4f;
+                Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] +
+                                      verts[vertexIndex + 3]) / 4f;
 
                 float scale = charSizes[i] / TargetText.fontSize;
 
@@ -487,14 +618,10 @@ namespace Core
                 }
             }
 
-            for (int i = 0; i < textInfo.meshInfo.Length; i++)
-            {
-                textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-            }
+            TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
         }
 
-        private IEnumerator DoWave()
+        private async UniTask DoWave(CancellationToken cancellationToken)
         {
             float wavePeriod = (2f * Mathf.PI) / WaveSpeed;
             float duration = DurationMode.GetDuration();
@@ -503,12 +630,11 @@ namespace Core
 
             float elapsed = 0f;
             float absoluteTime = 0f;
-            TargetText.ForceMeshUpdate();
+            CaptureBaseMesh();
 
             while (elapsed < duration)
             {
-                TargetText.ForceMeshUpdate();
-                var textInfo = TargetText.textInfo;
+                var textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.Vertices);
 
                 for (int i = 0; i < textInfo.characterCount; i++)
                 {
@@ -523,11 +649,7 @@ namespace Core
                     for (int v = 0; v < 4; v++) verts[vertexIndex + v] += new Vector3(0, offset, 0);
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
@@ -535,19 +657,20 @@ namespace Core
                 float delta = DeltaTime();
                 elapsed += delta;
                 absoluteTime += delta;
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoShake()
+        private async UniTask DoShake(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
 
+            CaptureBaseMesh();
+
             while (elapsed < duration)
             {
-                TargetText.ForceMeshUpdate();
-                var textInfo = TargetText.textInfo;
+                var textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.Vertices);
 
                 for (int i = 0; i < textInfo.characterCount; i++)
                 {
@@ -557,34 +680,32 @@ namespace Core
                     int vertexIndex = textInfo.characterInfo[i].vertexIndex;
                     Vector3[] verts = textInfo.meshInfo[meshIndex].vertices;
 
-                    Vector3 shake = new Vector3(UnityEngine.Random.Range(-ShakeIntensity, ShakeIntensity), UnityEngine.Random.Range(-ShakeIntensity, ShakeIntensity), 0);
+                    Vector3 shake = new Vector3(UnityEngine.Random.Range(-ShakeIntensity, ShakeIntensity),
+                        UnityEngine.Random.Range(-ShakeIntensity, ShakeIntensity), 0);
 
                     for (int v = 0; v < 4; v++) verts[vertexIndex + v] += shake;
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoRainbow()
+        private async UniTask DoRainbow(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
 
+            CaptureBaseMesh();
+
             while (elapsed < duration)
             {
-                TargetText.ForceMeshUpdate();
-                var textInfo = TargetText.textInfo;
+                var textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.Colors32);
 
                 for (int i = 0; i < textInfo.characterCount; i++)
                 {
@@ -593,35 +714,33 @@ namespace Core
                     int meshIndex = textInfo.characterInfo[i].materialReferenceIndex;
                     int vertexIndex = textInfo.characterInfo[i].vertexIndex;
 
-                    Color color = Color.HSVToRGB(Mathf.Repeat((elapsed * RainbowSpeed) + (i * RainbowFrequency), 1f), 1f, 1f);
+                    Color color = Color.HSVToRGB(Mathf.Repeat((elapsed * RainbowSpeed) + (i * RainbowFrequency), 1f), 1f,
+                        1f);
 
                     Color32[] colors = textInfo.meshInfo[meshIndex].colors32;
                     for (int v = 0; v < 4; v++) colors[vertexIndex + v] = color;
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoGlitch()
+        private async UniTask DoGlitch(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
 
+            CaptureBaseMesh();
+
             while (elapsed < duration)
             {
-                TargetText.ForceMeshUpdate();
-                var textInfo = TargetText.textInfo;
+                var textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.All);
 
                 for (int i = 0; i < textInfo.characterCount; i++)
                 {
@@ -634,38 +753,34 @@ namespace Core
 
                     if (UnityEngine.Random.value < GlitchChance)
                     {
-                        Vector3 glitch = new Vector3(UnityEngine.Random.Range(-GlitchIntensity, GlitchIntensity), UnityEngine.Random.Range(-GlitchIntensity * 0.5f, GlitchIntensity * 0.5f), 0);
+                        Vector3 glitch = new Vector3(UnityEngine.Random.Range(-GlitchIntensity, GlitchIntensity),
+                            UnityEngine.Random.Range(-GlitchIntensity * 0.5f, GlitchIntensity * 0.5f), 0);
 
                         for (int v = 0; v < 4; v++) verts[vertexIndex + v] += glitch;
 
                         if (GlitchColor)
                         {
-                            Color32 glitchCol = new Color32((byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
+                            Color32 glitchCol = new Color32((byte)UnityEngine.Random.Range(0, 255),
+                                (byte)UnityEngine.Random.Range(0, 255), (byte)UnityEngine.Random.Range(0, 255), 255);
 
                             for (int v = 0; v < 4; v++) colors[vertexIndex + v] = glitchCol;
                         }
                     }
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoFadeInPerChar()
+        private async UniTask DoFadeInPerChar(CancellationToken cancellationToken)
         {
-            TargetText.ForceMeshUpdate();
-            var textInfo = TargetText.textInfo;
+            var textInfo = CaptureBaseMesh();
             int charCount = textInfo.characterCount;
 
             float[] charElapsed = new float[charCount];
@@ -677,14 +792,15 @@ namespace Core
                 charStarted[i] = false;
             }
 
-            TargetText.ForceMeshUpdate();
             for (int i = 0; i < charCount; i++)
             {
                 if (!textInfo.characterInfo[i].isVisible) continue;
                 int meshIndex = textInfo.characterInfo[i].materialReferenceIndex;
                 int vertexIndex = textInfo.characterInfo[i].vertexIndex;
                 Color32[] colors = textInfo.meshInfo[meshIndex].colors32;
-                for (int v = 0; v < 4; v++) colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, 0);
+                for (int v = 0; v < 4; v++)
+                    colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                        colors[vertexIndex + v].b, 0);
             }
 
             float totalElapsed = 0f;
@@ -692,8 +808,7 @@ namespace Core
 
             while (totalElapsed < totalDuration)
             {
-                TargetText.ForceMeshUpdate();
-                textInfo = TargetText.textInfo;
+                textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.Colors32);
 
                 for (int i = 0; i < charCount; i++)
                 {
@@ -711,27 +826,24 @@ namespace Core
                     Color32[] colors = textInfo.meshInfo[meshIndex].colors32;
 
                     byte alpha = (byte)(t * 255);
-                    for (int v = 0; v < 4; v++) colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, alpha);
+                    for (int v = 0; v < 4; v++)
+                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                            colors[vertexIndex + v].b, alpha);
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 totalElapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoSlideInPerChar()
+        private async UniTask DoSlideInPerChar(CancellationToken cancellationToken)
         {
-            TargetText.ForceMeshUpdate();
-            var textInfo = TargetText.textInfo;
+            var textInfo = CaptureBaseMesh();
             int charCount = textInfo.characterCount;
 
             float[] charElapsed = new float[charCount];
@@ -748,8 +860,7 @@ namespace Core
 
             while (totalElapsed < totalDuration)
             {
-                TargetText.ForceMeshUpdate();
-                textInfo = TargetText.textInfo;
+                textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.All);
 
                 for (int i = 0; i < charCount; i++)
                 {
@@ -768,7 +879,8 @@ namespace Core
                         for (int v = 0; v < 4; v++)
                         {
                             verts[vertexIndex + v] = center;
-                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, 0);
+                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                                colors[vertexIndex + v].b, 0);
                         }
 
                         continue;
@@ -784,28 +896,24 @@ namespace Core
                     for (int v = 0; v < 4; v++)
                     {
                         verts[vertexIndex + v] += offset;
-                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, alpha);
+                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                            colors[vertexIndex + v].b, alpha);
                     }
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 totalElapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoSlideInPerCharAndWave()
+        private async UniTask DoSlideInPerCharAndWave(CancellationToken cancellationToken)
         {
-            TargetText.ForceMeshUpdate();
-            var textInfo = TargetText.textInfo;
+            var textInfo = CaptureBaseMesh();
             int charCount = textInfo.characterCount;
 
             float[] charElapsed = new float[charCount];
@@ -830,8 +938,7 @@ namespace Core
 
             while (totalElapsed < totalDuration)
             {
-                TargetText.ForceMeshUpdate();
-                textInfo = TargetText.textInfo;
+                textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.All);
 
                 for (int i = 0; i < charCount; i++)
                 {
@@ -850,7 +957,8 @@ namespace Core
                         for (int v = 0; v < 4; v++)
                         {
                             verts[vertexIndex + v] = center;
-                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, 0);
+                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                                colors[vertexIndex + v].b, 0);
                         }
 
                         continue;
@@ -864,23 +972,20 @@ namespace Core
                     Vector3 slideOffset = Vector3.LerpUnclamped(SlidePerCharOffset, Vector3.zero, curve);
 
                     float waveBlend = Mathf.Clamp01(t);
-                    float waveOffsetY = Mathf.Sin((absoluteTime * WaveSpeed) + (i * WaveFrequency)) * WaveAmplitude * waveBlend;
+                    float waveOffsetY = Mathf.Sin((absoluteTime * WaveSpeed) + (i * WaveFrequency)) * WaveAmplitude *
+                                        waveBlend;
 
                     Vector3 totalOffset = slideOffset + new Vector3(0f, waveOffsetY, 0f);
 
                     for (int v = 0; v < 4; v++)
                     {
                         verts[vertexIndex + v] += totalOffset;
-                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, alpha);
+                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                            colors[vertexIndex + v].b, alpha);
                     }
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
@@ -888,14 +993,13 @@ namespace Core
                 float delta = DeltaTime();
                 totalElapsed += delta;
                 absoluteTime += delta;
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator DoSlideInPerCharAndCurve()
+        private async UniTask DoSlideInPerCharAndCurve(CancellationToken cancellationToken)
         {
-            TargetText.ForceMeshUpdate();
-            var textInfo = TargetText.textInfo;
+            var textInfo = CaptureBaseMesh();
             int charCount = textInfo.characterCount;
 
             float[] charElapsed = new float[charCount];
@@ -915,8 +1019,7 @@ namespace Core
 
             while (totalElapsed < totalDuration)
             {
-                TargetText.ForceMeshUpdate();
-                textInfo = TargetText.textInfo;
+                textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.All);
 
                 for (int i = 0; i < charCount; i++)
                 {
@@ -955,7 +1058,8 @@ namespace Core
                         for (int v = 0; v < 4; v++)
                         {
                             verts[vertexIndex + v] = center;
-                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, 0);
+                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                                colors[vertexIndex + v].b, 0);
                         }
 
                         continue;
@@ -973,7 +1077,8 @@ namespace Core
                     float cosA = Mathf.Cos(blendedAngle);
                     float sinA = Mathf.Sin(blendedAngle);
 
-                    Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] + verts[vertexIndex + 3]) * 0.25f;
+                    Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] +
+                                          verts[vertexIndex + 3]) * 0.25f;
 
                     for (int v = 0; v < 4; v++)
                     {
@@ -984,22 +1089,18 @@ namespace Core
 
                         verts[vertexIndex + v] += slideOffset + archAppliedOffset;
 
-                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, alpha);
+                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                            colors[vertexIndex + v].b, alpha);
                     }
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 totalElapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
@@ -1028,11 +1129,9 @@ namespace Core
         //  Each char starts at index * BouncyArcDelay, so the chain is sequential.
         // ============================================================
 
-        private IEnumerator DoSlideInPerCharCartoonArc()
+        private async UniTask DoSlideInPerCharCartoonArc(CancellationToken cancellationToken)
         {
-            TargetText.ForceMeshUpdate();
-
-            var textInfo = TargetText.textInfo;
+            var textInfo = CaptureBaseMesh();
             int charCount = textInfo.characterCount;
 
             int[] visibleOrder = new int[charCount];
@@ -1052,8 +1151,7 @@ namespace Core
 
             while (totalElapsed < totalDuration)
             {
-                TargetText.ForceMeshUpdate();
-                textInfo = TargetText.textInfo;
+                textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.All);
 
                 float delta = DeltaTime();
 
@@ -1071,7 +1169,8 @@ namespace Core
                     Vector3[] verts = textInfo.meshInfo[meshIndex].vertices;
                     Color32[] colors = textInfo.meshInfo[meshIndex].colors32;
 
-                    Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] + verts[vertexIndex + 3]) * 0.25f;
+                    Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] +
+                                          verts[vertexIndex + 3]) * 0.25f;
 
                     // Hide before start
                     if (!charStarted[i])
@@ -1174,19 +1273,14 @@ namespace Core
                     }
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
 
                 totalElapsed += delta;
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
@@ -1196,10 +1290,9 @@ namespace Core
             return 1f - Mathf.Pow(1f - t, 3f);
         }
 
-        private IEnumerator DoSlideInPerCharBouncyArc()
+        private async UniTask DoSlideInPerCharBouncyArc(CancellationToken cancellationToken)
         {
-            TargetText.ForceMeshUpdate();
-            var textInfo = TargetText.textInfo;
+            var textInfo = CaptureBaseMesh();
             int charCount = textInfo.characterCount;
 
             float[] charElapsed = new float[charCount];
@@ -1218,8 +1311,7 @@ namespace Core
 
             while (totalElapsed < totalDuration)
             {
-                TargetText.ForceMeshUpdate();
-                textInfo = TargetText.textInfo;
+                textInfo = RestoreBaseMesh(TMP_VertexDataUpdateFlags.All);
 
                 for (int i = 0; i < charCount; i++)
                 {
@@ -1239,7 +1331,8 @@ namespace Core
                         for (int v = 0; v < 4; v++)
                         {
                             verts[vertexIndex + v] = hideCenter;
-                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, 0);
+                            colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                                colors[vertexIndex + v].b, 0);
                         }
 
                         continue;
@@ -1301,7 +1394,8 @@ namespace Core
                     byte alpha = (byte)(alphaT * 255);
 
                     // ---------- Apply to the 4 verts ----------
-                    Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] + verts[vertexIndex + 3]) * 0.25f;
+                    Vector3 charCenter = (verts[vertexIndex] + verts[vertexIndex + 1] + verts[vertexIndex + 2] +
+                                          verts[vertexIndex + 3]) * 0.25f;
 
                     float cosR = Mathf.Cos(rotRad);
                     float sinR = Mathf.Sin(rotRad);
@@ -1322,22 +1416,18 @@ namespace Core
                         // 4. Translate back, then apply position offset
                         verts[vertexIndex + v] = charCenter + new Vector3(rx, ry, local.z) + position;
 
-                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g, colors[vertexIndex + v].b, alpha);
+                        colors[vertexIndex + v] = new Color32(colors[vertexIndex + v].r, colors[vertexIndex + v].g,
+                            colors[vertexIndex + v].b, alpha);
                     }
                 }
 
-                for (int i = 0; i < textInfo.meshInfo.Length; i++)
-                {
-                    textInfo.meshInfo[i].mesh.vertices = textInfo.meshInfo[i].vertices;
-                    textInfo.meshInfo[i].mesh.colors32 = textInfo.meshInfo[i].colors32;
-                    TargetText.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-                }
+                TargetText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
 
 #if UNITY_EDITOR
                 if (!Application.isPlaying) MarkDirty();
 #endif
                 totalElapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
     }

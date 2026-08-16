@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -139,18 +140,20 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (Dimension == RigidbodyDimension.Rigidbody3D)
             {
-                if (TargetRigidbody == null) yield break;
+                if (TargetRigidbody == null) return UniTask.CompletedTask;
                 Apply3D();
             }
             else
             {
-                if (TargetRigidbody2D == null) yield break;
+                if (TargetRigidbody2D == null) return UniTask.CompletedTask;
                 Apply2D();
             }
+
+            return UniTask.CompletedTask;
         }
 
         private void Apply3D()

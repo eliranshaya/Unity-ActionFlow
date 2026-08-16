@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -70,25 +71,26 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetCanvasGroup == null) yield break;
+            if (TargetCanvasGroup == null) return UniTask.CompletedTask;
 
             switch (AnimationMode)
             {
-                case CanvasGroupAnimationMode.SetAlpha: yield return DoSetAlpha(); break;
-                case CanvasGroupAnimationMode.LerpAlpha: yield return DoLerpAlpha(); break;
-                case CanvasGroupAnimationMode.SetInteractable: yield return DoSetInteractable(); break;
+                case CanvasGroupAnimationMode.SetAlpha: DoSetAlpha(); break;
+                case CanvasGroupAnimationMode.LerpAlpha: return DoLerpAlpha(cancellationToken);
+                case CanvasGroupAnimationMode.SetInteractable: DoSetInteractable(); break;
             }
+
+            return UniTask.CompletedTask;
         }
 
-        private IEnumerator DoSetAlpha()
+        private void DoSetAlpha()
         {
             TargetCanvasGroup.alpha = AlphaValue;
-            yield break;
         }
 
-        private IEnumerator DoLerpAlpha()
+        private async UniTask DoLerpAlpha(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -101,17 +103,16 @@ namespace Core
                 float curvedT = AlphaCurve.Evaluate(t);
                 TargetCanvasGroup.alpha = Mathf.LerpUnclamped(AlphaFrom, AlphaTo, curvedT);
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetCanvasGroup.alpha = AlphaTo;
         }
 
-        private IEnumerator DoSetInteractable()
+        private void DoSetInteractable()
         {
             TargetCanvasGroup.interactable = Interactable;
             if (AlsoSetBlocksRaycasts) TargetCanvasGroup.blocksRaycasts = Interactable;
-            yield break;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -102,22 +103,22 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (TargetAnimator == null || string.IsNullOrEmpty(StateName))
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             int stateHash = Animator.StringToHash(StateName);
             TargetAnimator.Play(stateHash, LayerIndex, NormalizedTime);
 
-            if (!WaitForCompletion)
-            {
-                yield break;
-            }
+            return WaitForCompletion ? WaitForClipAsync(cancellationToken) : UniTask.CompletedTask;
+        }
 
-            yield return YieldInstruction;
+        private async UniTask WaitForClipAsync(CancellationToken cancellationToken)
+        {
+            await NextFrame(cancellationToken);
 
             int layer = LayerIndex < 0 ? 0 : LayerIndex;
             AnimatorClipInfo[] clipInfos = TargetAnimator.GetCurrentAnimatorClipInfo(layer);
@@ -126,7 +127,7 @@ namespace Core
             {
                 AnimationClip clip = clipInfos[0].clip;
                 float waitTime = clip.isLooping ? 0f : clip.length * (1f - NormalizedTime);
-                yield return new WaitForSeconds(waitTime);
+                await WaitForDuration(waitTime, cancellationToken);
             }
         }
     }

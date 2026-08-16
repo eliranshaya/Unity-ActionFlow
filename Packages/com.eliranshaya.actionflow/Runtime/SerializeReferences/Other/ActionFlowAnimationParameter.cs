@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -61,13 +62,15 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetAnimator == null) yield break;
-            if (string.IsNullOrEmpty(ParameterName)) yield break;
+            if (TargetAnimator == null) return UniTask.CompletedTask;
+            if (string.IsNullOrEmpty(ParameterName)) return UniTask.CompletedTask;
 
             Action applyParameter = BuildParameterDelegate();
             applyParameter?.Invoke();
+
+            return UniTask.CompletedTask;
         }
 
         private Action BuildParameterDelegate()

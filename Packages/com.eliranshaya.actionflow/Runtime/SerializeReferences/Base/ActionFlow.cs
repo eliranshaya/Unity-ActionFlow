@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -57,7 +58,16 @@ namespace Core
         public ActionFlowTiming Timing;
 
         protected Func<float> DeltaTime { get; private set; }
-        protected YieldInstruction YieldInstruction { get; private set; }
+
+        /// <summary>
+        /// The player loop point this action resumes on, the UniTask equivalent of the old YieldInstruction.
+        /// </summary>
+        protected PlayerLoopTiming LoopTiming { get; private set; } = PlayerLoopTiming.Update;
+
+        /// <summary>
+        /// Whether timed waits made by this action ignore Time.timeScale.
+        /// </summary>
+        protected DelayType DelayMode { get; private set; } = DelayType.DeltaTime;
 
         protected ActionFlow()
         {
@@ -144,7 +154,8 @@ namespace Core
             if (Timing == null)
             {
                 DeltaTime = () => Time.deltaTime;
-                YieldInstruction = null;
+                LoopTiming = PlayerLoopTiming.Update;
+                DelayMode = DelayType.DeltaTime;
                 return;
             }
 
@@ -152,63 +163,87 @@ namespace Core
             {
                 case ActionFlowTiming.UpdateMode.EndOfFrame:
                     DeltaTime = () => Time.deltaTime;
-                    YieldInstruction = new WaitForEndOfFrame();
+                    LoopTiming = PlayerLoopTiming.LastPostLateUpdate;
+                    DelayMode = DelayType.DeltaTime;
                     break;
 
                 case ActionFlowTiming.UpdateMode.FixedUpdate:
                     DeltaTime = () => Time.fixedDeltaTime;
-                    YieldInstruction = new WaitForFixedUpdate();
+                    LoopTiming = PlayerLoopTiming.FixedUpdate;
+                    DelayMode = DelayType.DeltaTime;
                     break;
 
                 case ActionFlowTiming.UpdateMode.UnscaledUpdate:
                     DeltaTime = () => Time.unscaledDeltaTime;
-                    YieldInstruction = null;
+                    LoopTiming = PlayerLoopTiming.Update;
+                    DelayMode = DelayType.UnscaledDeltaTime;
                     break;
 
                 default:
                     DeltaTime = () => Time.deltaTime;
-                    YieldInstruction = null;
+                    LoopTiming = PlayerLoopTiming.Update;
+                    DelayMode = DelayType.DeltaTime;
                     break;
             }
         }
 
-        protected IEnumerator WaitForDuration(float duration)
+        /// <summary>
+        /// Suspends until the next tick of <see cref="LoopTiming"/>, the replacement for
+        /// <c>yield return YieldInstruction</c>. Backed by UniTask's pooled promises, so it does not
+        /// allocate per frame the way the old coroutine yield instructions did.
+        /// </summary>
+        protected UniTask NextFrame(CancellationToken cancellationToken)
         {
-            if (duration <= 0f)
-            {
-                yield break;
-            }
+            return UniTask.Yield(LoopTiming, cancellationToken);
+        }
 
+        protected UniTask WaitForDuration(float duration, CancellationToken cancellationToken)
+        {
+            return duration <= 0f
+                ? UniTask.CompletedTask
+                : WaitForDurationAsync(duration, cancellationToken);
+        }
+
+        private async UniTask WaitForDurationAsync(float duration, CancellationToken cancellationToken)
+        {
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
         }
 
-        private IEnumerator HandleTimingAndRepeats()
+        private UniTask HandleTimingAndRepeats(CancellationToken cancellationToken)
         {
-            if (Timing == null)
+            // Fast path: no timing at all, or timing with nothing to schedule around the action.
+            // Skipping the async state machine here keeps the common case allocation free.
+            if (Timing == null ||
+                (Timing.InitialDelay <= 0f && !Timing.RepeatForever && Timing.NumberOfRepeats <= 0))
             {
-                yield return CustomExecutionCoroutine();
-                yield break;
+                return CustomExecutionAsync(cancellationToken);
             }
 
+            return HandleTimingAndRepeatsAsync(cancellationToken);
+        }
+
+        private async UniTask HandleTimingAndRepeatsAsync(CancellationToken cancellationToken)
+        {
             if (Timing.InitialDelay > 0f)
             {
-                yield return WaitForDuration(Timing.InitialDelay);
+                await WaitForDurationAsync(Timing.InitialDelay, cancellationToken);
             }
 
             if (Timing.RepeatForever)
             {
+                // Runs until the cancellation token stops it.
                 while (true)
                 {
-                    yield return CustomExecutionCoroutine();
+                    await CustomExecutionAsync(cancellationToken);
 
                     if (Timing.DelayBetweenRepeats > 0f)
                     {
-                        yield return WaitForDuration(Timing.DelayBetweenRepeats);
+                        await WaitForDurationAsync(Timing.DelayBetweenRepeats, cancellationToken);
                     }
                 }
             }
@@ -216,25 +251,25 @@ namespace Core
             {
                 for (int i = 0; i <= Timing.NumberOfRepeats; i++)
                 {
-                    yield return CustomExecutionCoroutine();
+                    await CustomExecutionAsync(cancellationToken);
 
                     if (i < Timing.NumberOfRepeats && Timing.DelayBetweenRepeats > 0f)
                     {
-                        yield return WaitForDuration(Timing.DelayBetweenRepeats);
+                        await WaitForDurationAsync(Timing.DelayBetweenRepeats, cancellationToken);
                     }
                 }
             }
             else
             {
-                yield return CustomExecutionCoroutine();
+                await CustomExecutionAsync(cancellationToken);
             }
         }
 
-        public virtual IEnumerator ExecutionCoroutine()
+        public virtual UniTask ExecutionAsync(CancellationToken cancellationToken)
         {
             if (!Active)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             if (Chance < 100f)
@@ -242,15 +277,15 @@ namespace Core
                 float random = UnityEngine.Random.Range(0f, 100f);
                 if (random > Chance)
                 {
-                    yield break;
+                    return UniTask.CompletedTask;
                 }
             }
 
             InitializeUpdateModeSettings();
 
-            yield return HandleTimingAndRepeats();
+            return HandleTimingAndRepeats(cancellationToken);
         }
 
-        protected abstract IEnumerator CustomExecutionCoroutine();
+        protected abstract UniTask CustomExecutionAsync(CancellationToken cancellationToken);
     }
 }

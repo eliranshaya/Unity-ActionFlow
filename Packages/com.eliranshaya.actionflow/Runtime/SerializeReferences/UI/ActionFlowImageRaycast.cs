@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,14 +37,14 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetImage == null) yield break;
+            if (TargetImage == null) return UniTask.CompletedTask;
 
             bool original = TargetImage.raycastTarget;
             TargetImage.raycastTarget = RaycastTarget;
 
-            yield break;
+            return UniTask.CompletedTask;
         }
     }
 }

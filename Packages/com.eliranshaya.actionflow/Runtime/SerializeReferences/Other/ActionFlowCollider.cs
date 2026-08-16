@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -94,11 +95,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (Dimension == ColliderDimension.Collider3D)
             {
-                if (TargetCollider == null) yield break;
+                if (TargetCollider == null) return UniTask.CompletedTask;
 
                 if (ChangeEnabled)
                     TargetCollider.enabled = Action switch
@@ -117,7 +118,7 @@ namespace Core
             }
             else
             {
-                if (TargetCollider2D == null) yield break;
+                if (TargetCollider2D == null) return UniTask.CompletedTask;
 
                 if (ChangeEnabled)
                     TargetCollider2D.enabled = Action switch
@@ -134,6 +135,8 @@ namespace Core
                 if (ChangeMaterial && Material2D != null)
                     TargetCollider2D.sharedMaterial = Material2D;
             }
+
+            return UniTask.CompletedTask;
         }
     }
 }

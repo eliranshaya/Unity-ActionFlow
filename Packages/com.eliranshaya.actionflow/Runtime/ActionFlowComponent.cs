@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -39,8 +39,7 @@ namespace Core
         private Action _onStartCallback;
         private Action _onEnableCallback;
 
-        private Coroutine _coroutine;
-        private readonly List<Coroutine> _activeCoroutines = new List<Coroutine>();
+        private CancellationTokenSource _cts;
         private bool _isExecuting = false;
 
         private Vector3[] _cachedLocalPositions;
@@ -148,7 +147,8 @@ namespace Core
                 }
             }
 
-            _coroutine = StartCoroutine(CallbackCoroutine(onComplete));
+            _cts = new CancellationTokenSource();
+            RunAsync(onComplete, _cts.Token).Forget();
         }
 
         public void CacheResetPose()
@@ -225,72 +225,81 @@ namespace Core
             }
         }
 
+        //TODO Maybe add a StopCallback to each actionflow
         public void StopExecution()
         {
             _isExecuting = false;
 
-            if (_coroutine != null)
+            // Cancelling the token stops the driver and every fire-and-forget action it started,
+            // which is what the per-coroutine bookkeeping used to do.
+            if (_cts != null)
             {
-                StopCoroutine(_coroutine);
-                _coroutine = null;
+                _cts.Cancel();
+                _cts.Dispose();
+                _cts = null;
             }
-
-            //TODO Maybe add a StopCallback to each actionflow
-            foreach (var activeCoroutine in _activeCoroutines)
-            {
-                if (activeCoroutine != null)
-                {
-                    StopCoroutine(activeCoroutine);
-                }
-            }
-
-            _activeCoroutines.Clear();
         }
 
-        private IEnumerator CallbackCoroutine(Action onComplete = null)
+        private async UniTaskVoid RunAsync(Action onComplete, CancellationToken cancellationToken)
         {
             _isExecuting = true;
 
             int executionCount = _actionFlowSettings.RepeatForever ? -1 : _actionFlowSettings.NumberOfRepeats + 1;
             int currentExecution = 0;
 
-            while (_isExecuting && (executionCount < 0 || currentExecution < executionCount))
+            try
             {
-                _activeCoroutines.Clear();
-
-                foreach (var actionFlow in ActionFlows)
+                while (_isExecuting && (executionCount < 0 || currentExecution < executionCount))
                 {
-                    if (!_isExecuting)
+                    ActionFlow[] actionFlows = ActionFlows;
+
+                    for (int i = 0; i < actionFlows.Length; i++)
                     {
-                        yield break;
+                        if (!_isExecuting)
+                        {
+                            return;
+                        }
+
+                        ActionFlow actionFlow = actionFlows[i];
+                        if (actionFlow == null)
+                        {
+                            continue;
+                        }
+
+                        bool shouldWait = actionFlow.Timing != null && actionFlow.Timing.WaitForCompletion;
+                        if (shouldWait)
+                        {
+                            await actionFlow.ExecutionAsync(cancellationToken);
+                        }
+                        else
+                        {
+                            actionFlow.ExecutionAsync(cancellationToken).Forget();
+                        }
                     }
 
-                    Coroutine actionCoroutine = StartCoroutine(actionFlow.ExecutionCoroutine());
-                    _activeCoroutines.Add(actionCoroutine);
+                    await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
 
-                    bool shouldWait = actionFlow.Timing != null && actionFlow.Timing.WaitForCompletion;
-                    if (shouldWait)
+                    currentExecution++;
+
+                    if (_isExecuting && (executionCount < 0 || currentExecution < executionCount))
                     {
-                        yield return actionCoroutine;
-                        _activeCoroutines.Remove(actionCoroutine);
-                    }
-                }
-
-                yield return null;
-
-                currentExecution++;
-
-                if (_isExecuting && (executionCount < 0 || currentExecution < executionCount))
-                {
-                    if (_actionFlowSettings.DelayBetweenRepeats > 0f)
-                    {
-                        yield return new WaitForSeconds(_actionFlowSettings.DelayBetweenRepeats);
+                        if (_actionFlowSettings.DelayBetweenRepeats > 0f)
+                        {
+                            await UniTask.Delay(
+                                TimeSpan.FromSeconds(_actionFlowSettings.DelayBetweenRepeats),
+                                DelayType.DeltaTime,
+                                PlayerLoopTiming.Update,
+                                cancellationToken);
+                        }
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
 
             _isExecuting = false;
-            _activeCoroutines.Clear();
             onComplete?.Invoke();
         }
 

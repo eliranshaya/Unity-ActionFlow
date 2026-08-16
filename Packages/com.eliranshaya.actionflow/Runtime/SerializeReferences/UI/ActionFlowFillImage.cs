@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -68,26 +69,27 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetImage == null) yield break;
+            if (TargetImage == null) return UniTask.CompletedTask;
 
             switch (AnimationMode)
             {
-                case FillImageAnimationMode.SetFill: yield return DoSetFill(); break;
-                case FillImageAnimationMode.LerpFill: yield return DoLerpFill(); break;
+                case FillImageAnimationMode.SetFill: DoSetFill(); break;
+                case FillImageAnimationMode.LerpFill: return DoLerpFill(cancellationToken);
             }
+
+            return UniTask.CompletedTask;
         }
 
-        private IEnumerator DoSetFill()
+        private void DoSetFill()
         {
             float original = RestoreOnComplete ? TargetImage.fillAmount : 0f;
             TargetImage.fillAmount = FillValue;
             if (RestoreOnComplete) TargetImage.fillAmount = original;
-            yield break;
         }
 
-        private IEnumerator DoLerpFill()
+        private async UniTask DoLerpFill(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -103,7 +105,7 @@ namespace Core
                 TargetImage.fillAmount = Mathf.LerpUnclamped(FillFrom, FillTo, curvedT);
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetImage.fillAmount = RestoreOnComplete ? original : FillTo;

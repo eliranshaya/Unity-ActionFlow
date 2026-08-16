@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -74,9 +75,9 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetImage == null) yield break;
+            if (TargetImage == null) return UniTask.CompletedTask;
 
             switch (Mode)
             {
@@ -85,22 +86,22 @@ namespace Core
                     break;
 
                 case ModeType.Lerp:
-                    yield return AnimateLerp();
-                    break;
+                    return AnimateLerp(cancellationToken);
 
                 case ModeType.ToDestination:
-                    yield return AnimateToDestination();
-                    break;
+                    return AnimateToDestination(cancellationToken);
             }
+
+            return UniTask.CompletedTask;
         }
 
-        private IEnumerator AnimateLerp()
+        private async UniTask AnimateLerp(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 TargetImage.color = ToColor;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -111,13 +112,13 @@ namespace Core
                 float curveValue = Curve.Evaluate(percent);
                 TargetImage.color = Color.LerpUnclamped(FromColor, ToColor, curveValue);
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetImage.color = Color.LerpUnclamped(FromColor, ToColor, Curve.Evaluate(1f));
         }
 
-        private IEnumerator AnimateToDestination()
+        private async UniTask AnimateToDestination(CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             Color initialColor = TargetImage.color;
@@ -125,7 +126,7 @@ namespace Core
             if (duration <= 0f)
             {
                 TargetImage.color = DestinationColor;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -136,7 +137,7 @@ namespace Core
                 float curveValue = Curve.Evaluate(percent);
                 TargetImage.color = Color.LerpUnclamped(initialColor, DestinationColor, curveValue);
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetImage.color = Color.LerpUnclamped(initialColor, DestinationColor, Curve.Evaluate(1f));

@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -141,68 +142,62 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetRenderer == null) yield break;
+            if (TargetRenderer == null) return UniTask.CompletedTask;
 
             _propertyId = Shader.PropertyToID(PropertyName);
 
             Material mat = GetMaterial();
-            if (mat == null) yield break;
+            if (mat == null) return UniTask.CompletedTask;
 
             switch (AnimationMode)
             {
-                case MaterialAnimationMode.SetFloat: yield return DoSetFloat(mat); break;
-                case MaterialAnimationMode.SetColor: yield return DoSetColor(mat); break;
-                case MaterialAnimationMode.SetInt: yield return DoSetInt(mat); break;
-                case MaterialAnimationMode.SetVector: yield return DoSetVector(mat); break;
-                case MaterialAnimationMode.LerpFloat: yield return DoLerpFloat(mat); break;
-                case MaterialAnimationMode.LerpColor: yield return DoLerpColor(mat); break;
-                case MaterialAnimationMode.LerpVector: yield return DoLerpVector(mat); break;
+                case MaterialAnimationMode.SetFloat: DoSetFloat(mat); break;
+                case MaterialAnimationMode.SetColor: DoSetColor(mat); break;
+                case MaterialAnimationMode.SetInt: DoSetInt(mat); break;
+                case MaterialAnimationMode.SetVector: DoSetVector(mat); break;
+                case MaterialAnimationMode.LerpFloat: return DoLerpFloat(mat, cancellationToken);
+                case MaterialAnimationMode.LerpColor: return DoLerpColor(mat, cancellationToken);
+                case MaterialAnimationMode.LerpVector: return DoLerpVector(mat, cancellationToken);
             }
+
+            return UniTask.CompletedTask;
         }
 
-        private IEnumerator DoSetFloat(Material mat)
+        private void DoSetFloat(Material mat)
         {
             float original = RestoreOnComplete ? mat.GetFloat(_propertyId) : 0f;
             mat.SetFloat(_propertyId, FloatValue);
 
             if (RestoreOnComplete) mat.SetFloat(_propertyId, original);
-            
-            yield break;
         }
 
-        private IEnumerator DoSetColor(Material mat)
+        private void DoSetColor(Material mat)
         {
             Color original = RestoreOnComplete ? mat.GetColor(_propertyId) : Color.white;
             mat.SetColor(_propertyId, ColorValue);
 
             if (RestoreOnComplete) mat.SetColor(_propertyId, original);
-
-            yield break;
         }
 
-        private IEnumerator DoSetInt(Material mat)
+        private void DoSetInt(Material mat)
         {
             int original = RestoreOnComplete ? mat.GetInt(_propertyId) : 0;
             mat.SetInt(_propertyId, IntValue);
 
             if (RestoreOnComplete) mat.SetInt(_propertyId, original);
-
-            yield break;
         }
 
-        private IEnumerator DoSetVector(Material mat)
+        private void DoSetVector(Material mat)
         {
             Vector4 original = RestoreOnComplete ? mat.GetVector(_propertyId) : Vector4.zero;
             mat.SetVector(_propertyId, VectorValue);
 
             if (RestoreOnComplete) mat.SetVector(_propertyId, original);
-
-            yield break;
         }
 
-        private IEnumerator DoLerpFloat(Material mat)
+        private async UniTask DoLerpFloat(Material mat, CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -216,13 +211,13 @@ namespace Core
                 mat.SetFloat(_propertyId, Mathf.LerpUnclamped(FloatFrom, FloatTo, curvedT));
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             mat.SetFloat(_propertyId, RestoreOnComplete ? original : FloatTo);
         }
 
-        private IEnumerator DoLerpColor(Material mat)
+        private async UniTask DoLerpColor(Material mat, CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -236,13 +231,13 @@ namespace Core
                 mat.SetColor(_propertyId, Color.LerpUnclamped(ColorFrom, ColorTo, curvedT));
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             mat.SetColor(_propertyId, RestoreOnComplete ? original : ColorTo);
         }
 
-        private IEnumerator DoLerpVector(Material mat)
+        private async UniTask DoLerpVector(Material mat, CancellationToken cancellationToken)
         {
             float duration = DurationMode.GetDuration();
             float elapsed = 0f;
@@ -256,7 +251,7 @@ namespace Core
                 mat.SetVector(_propertyId, Vector4.LerpUnclamped(VectorFrom, VectorTo, curvedT));
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             mat.SetVector(_propertyId, RestoreOnComplete ? original : VectorTo);

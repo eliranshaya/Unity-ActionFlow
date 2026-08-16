@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -52,11 +53,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (Parent == null || Prefab == null)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             GameObject instance = UnityEngine.Object.Instantiate(Prefab, Parent);
@@ -71,6 +72,8 @@ namespace Core
                 instance.transform.localPosition = LocalPositionOffset;
                 instance.transform.localRotation = Quaternion.Euler(LocalRotationOffset);
             }
+
+            return UniTask.CompletedTask;
         }
     }
 }

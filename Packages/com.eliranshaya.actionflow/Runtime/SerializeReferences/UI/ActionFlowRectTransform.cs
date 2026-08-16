@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -88,11 +89,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (AnimatePositionTarget == null)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             _initialPosition = AnimatePositionTarget.anchoredPosition;
@@ -100,27 +101,23 @@ namespace Core
             switch (Mode)
             {
                 case ModeType.Absolute:
-                    yield return AnimateAbsolute();
-                    break;
+                    return AnimateAbsolute(cancellationToken);
                 case ModeType.Additive:
-                    yield return AnimateAdditive();
-                    break;
+                    return AnimateAdditive(cancellationToken);
                 case ModeType.ToDestination:
-                    yield return AnimateToDestination();
-                    break;
+                    return AnimateToDestination(cancellationToken);
                 default:
-                    yield return AnimateAbsolute();
-                    break;
+                    return AnimateAbsolute(cancellationToken);
             }
         }
 
-        private IEnumerator AnimateAbsolute()
+        private async UniTask AnimateAbsolute(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 AnimatePositionTarget.anchoredPosition = EndPosition;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -166,19 +163,19 @@ namespace Core
                 AnimatePositionTarget.anchoredPosition = newPosition;
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyPosition?.Invoke(1f);
             AnimatePositionTarget.anchoredPosition = newPosition;
         }
 
-        private IEnumerator AnimateAdditive()
+        private async UniTask AnimateAdditive(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -226,7 +223,7 @@ namespace Core
                 AnimatePositionTarget.anchoredPosition = newPosition;
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             newPosition = _initialPosition;
@@ -234,13 +231,13 @@ namespace Core
             AnimatePositionTarget.anchoredPosition = newPosition;
         }
 
-        private IEnumerator AnimateToDestination()
+        private async UniTask AnimateToDestination(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 AnimatePositionTarget.anchoredPosition = DestinationPosition;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -286,7 +283,7 @@ namespace Core
                 AnimatePositionTarget.anchoredPosition = newPosition;
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyPosition?.Invoke(1f);

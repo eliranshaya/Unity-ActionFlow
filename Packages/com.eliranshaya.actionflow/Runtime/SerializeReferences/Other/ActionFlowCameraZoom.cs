@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -69,9 +70,9 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override async UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
-            if (TargetCamera == null) yield break;
+            if (TargetCamera == null) return;
 
             float duration = DurationMode.GetDuration();
 
@@ -80,7 +81,7 @@ namespace Core
             if (duration <= 0f)
             {
                 applyZoom.Invoke(1f);
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -91,7 +92,7 @@ namespace Core
                 applyZoom.Invoke(ZoomCurve.Evaluate(t));
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyZoom.Invoke(ZoomCurve.Evaluate(1f));

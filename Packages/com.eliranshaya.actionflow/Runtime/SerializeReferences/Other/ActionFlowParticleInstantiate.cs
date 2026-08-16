@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -55,11 +56,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override async UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (Parent == null || ParticlePrefab == null)
             {
-                yield break;
+                return;
             }
 
             var instance = UnityEngine.Object.Instantiate(ParticlePrefab, Parent);
@@ -90,7 +91,7 @@ namespace Core
                 while (elapsed < totalDuration || instance.IsAlive(true))
                 {
                     elapsed += DeltaTime();
-                    yield return YieldInstruction;
+                    await NextFrame(cancellationToken);
                 }
 
                 if (instance != null)

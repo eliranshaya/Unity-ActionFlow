@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -39,11 +40,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(LogMessage))
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             string message = UseRichText ? LogMessage : LogMessage.Replace("<color=", "").Replace("</color>", "").Replace("<b>", "").Replace("</b>", "").Replace("<i>", "").Replace("</i>", "");
@@ -63,7 +64,7 @@ namespace Core
                     break;
             }
 
-            yield break;
+            return UniTask.CompletedTask;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -78,17 +79,17 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override async UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (TargetCamera == null)
             {
-                yield break;
+                return;
             }
 
             float duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -104,7 +105,7 @@ namespace Core
                 applyShake?.Invoke(elapsed, t);
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             TargetCamera.transform.localPosition = originalLocalPosition;

@@ -2,7 +2,8 @@
     "name": "Core.ActionFlow",
     "rootNamespace": "",
     "references": [
-        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -10,7 +11,15 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
+    "defineConstraints": [
+        "ACTIONFLOW_UNITASK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.cysharp.unitask",
+            "expression": "",
+            "define": "ACTIONFLOW_UNITASK"
+        }
+    ],
     "noEngineReferences": false
 }

@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -75,7 +76,7 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override async UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             UnityEngine.SceneManagement.LoadSceneMode unityLoadMode = LoadMode == LoadSceneMode.Additive
                 ? UnityEngine.SceneManagement.LoadSceneMode.Additive
@@ -92,7 +93,7 @@ namespace Core
                     SceneManager.LoadScene(SceneIndex, unityLoadMode);
                 }
 
-                yield break;
+                return;
             }
 
             AsyncOperation operation = ReferenceMode == SceneReferenceMode.ByName
@@ -101,7 +102,7 @@ namespace Core
 
             if (operation == null)
             {
-                yield break;
+                return;
             }
 
             if (ManualActivation)
@@ -110,12 +111,12 @@ namespace Core
 
                 while (operation.progress < 0.9f)
                 {
-                    yield return YieldInstruction;
+                    await NextFrame(cancellationToken);
                 }
 
                 if (ActivationDelay > 0f)
                 {
-                    yield return new WaitForSeconds(ActivationDelay);
+                    await WaitForDuration(ActivationDelay, cancellationToken);
                 }
 
                 operation.allowSceneActivation = true;
@@ -125,7 +126,7 @@ namespace Core
             {
                 while (!operation.isDone)
                 {
-                    yield return YieldInstruction;
+                    await NextFrame(cancellationToken);
                 }
             }
         }

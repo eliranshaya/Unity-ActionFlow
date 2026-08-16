@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -99,11 +100,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (AnimateScaleTarget == null)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             _initialScale = AnimateScaleTarget.localScale;
@@ -111,27 +112,23 @@ namespace Core
             switch (Mode)
             {
                 case ModeType.Absolute:
-                    yield return AnimateAbsolute();
-                    break;
+                    return AnimateAbsolute(cancellationToken);
                 case ModeType.Additive:
-                    yield return AnimateAdditive();
-                    break;
+                    return AnimateAdditive(cancellationToken);
                 case ModeType.ToDestination:
-                    yield return AnimateToDestination();
-                    break;
+                    return AnimateToDestination(cancellationToken);
                 default:
-                    yield return AnimateAbsolute();
-                    break;
+                    return AnimateAbsolute(cancellationToken);
             }
         }
 
-        private IEnumerator AnimateAbsolute()
+        private async UniTask AnimateAbsolute(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 AnimateScaleTarget.localScale = EndScale;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -187,19 +184,19 @@ namespace Core
                 AnimateScaleTarget.localScale = newScale;
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyScale?.Invoke(1f);
             AnimateScaleTarget.localScale = newScale;
         }
 
-        private IEnumerator AnimateAdditive()
+        private async UniTask AnimateAdditive(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -257,7 +254,7 @@ namespace Core
                 AnimateScaleTarget.localScale = newScale;
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             newScale = _initialScale;
@@ -265,13 +262,13 @@ namespace Core
             AnimateScaleTarget.localScale = newScale;
         }
 
-        private IEnumerator AnimateToDestination()
+        private async UniTask AnimateToDestination(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 AnimateScaleTarget.localScale = DestinationScale;
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -323,7 +320,7 @@ namespace Core
                 applyScale?.Invoke(percent);
                 AnimateScaleTarget.localScale = newScale;
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyScale?.Invoke(1f);

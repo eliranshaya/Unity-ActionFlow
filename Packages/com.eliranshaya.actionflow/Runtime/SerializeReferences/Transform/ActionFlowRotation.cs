@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Core
@@ -104,11 +105,11 @@ namespace Core
         }
 #endif
 
-        protected override IEnumerator CustomExecutionCoroutine()
+        protected override UniTask CustomExecutionAsync(CancellationToken cancellationToken)
         {
             if (AnimateRotationTarget == null)
             {
-                yield break;
+                return UniTask.CompletedTask;
             }
 
             if (RotationMode == TransformSpace.World)
@@ -127,27 +128,23 @@ namespace Core
             switch (Mode)
             {
                 case ModeType.Absolute:
-                    yield return AnimateAbsolute();
-                    break;
+                    return AnimateAbsolute(cancellationToken);
                 case ModeType.Additive:
-                    yield return AnimateAdditive();
-                    break;
+                    return AnimateAdditive(cancellationToken);
                 case ModeType.ToDestination:
-                    yield return AnimateToDestination();
-                    break;
+                    return AnimateToDestination(cancellationToken);
                 default:
-                    yield return AnimateAbsolute();
-                    break;
+                    return AnimateAbsolute(cancellationToken);
             }
         }
 
-        private IEnumerator AnimateAbsolute()
+        private async UniTask AnimateAbsolute(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 _setRotation(EndRotation);
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -203,19 +200,19 @@ namespace Core
                 _setRotation(newRotation);
 
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyRotation?.Invoke(1f);
             _setRotation(newRotation);
         }
 
-        private IEnumerator AnimateAdditive()
+        private async UniTask AnimateAdditive(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -272,7 +269,7 @@ namespace Core
 
                 _setRotation(newRotation);
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             newRotation = _initialRotation;
@@ -280,13 +277,13 @@ namespace Core
             _setRotation(newRotation);
         }
 
-        private IEnumerator AnimateToDestination()
+        private async UniTask AnimateToDestination(CancellationToken cancellationToken)
         {
             var duration = DurationMode.GetDuration();
             if (duration <= 0f)
             {
                 _setRotation(DestinationRotation);
-                yield break;
+                return;
             }
 
             float elapsed = 0f;
@@ -340,7 +337,7 @@ namespace Core
                 applyRotation?.Invoke(percent);
                 _setRotation(newRotation);
                 elapsed += DeltaTime();
-                yield return YieldInstruction;
+                await NextFrame(cancellationToken);
             }
 
             applyRotation?.Invoke(1f);
