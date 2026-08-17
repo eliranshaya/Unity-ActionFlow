@@ -1,6 +1,6 @@
 # ActionFlow
 
-ActionFlow is an editor-driven animation and sequencing tool for Unity. You add an `ActionFlowComponent` to a GameObject and build a list of action flows that run one after another or in parallel, each with its own timing — initial delays and an optional wait-for-completion. Flows can fire automatically on `Start` or `OnEnable`, or be triggered manually from your own code. Built-in repeat options let you loop the whole sequence a set number of times or forever, with a configurable delay between cycles. It can also cache and restore the starting transforms of target objects, so every playthrough begins from a clean pose.
+ActionFlow is an editor-driven animation and sequencing tool for Unity. You add an `ActionFlowComponent` to a GameObject and build a list of action flows that run one after another or in parallel, each with its own timing — initial delays and an optional wait-for-completion. Flows can fire automatically on `Start` or `OnEnable`, or be triggered manually from your own code. Built-in repeat options let you loop the whole sequence a set number of times or forever, with a configurable delay between cycles.
 
 ## Requirements
 
@@ -51,7 +51,7 @@ https://github.com/eliranshaya/Unity-ActionFlow.git?path=/Packages/com.eliransha
 To lock to a specific version, append the tag:
 
 ```
-https://github.com/eliranshaya/Unity-ActionFlow.git?path=/Packages/com.eliranshaya.actionflow#2.0.0
+https://github.com/eliranshaya/Unity-ActionFlow.git?path=/Packages/com.eliranshaya.actionflow#2.0.1
 ```
 
 You can also add it manually by editing your project's `Packages/manifest.json`:
@@ -59,7 +59,7 @@ You can also add it manually by editing your project's `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.eliranshaya.actionflow": "https://github.com/eliranshaya/Unity-ActionFlow.git?path=/Packages/com.eliranshaya.actionflow#2.0.0"
+    "com.eliranshaya.actionflow": "https://github.com/eliranshaya/Unity-ActionFlow.git?path=/Packages/com.eliranshaya.actionflow#2.0.1"
   }
 }
 ```
@@ -69,8 +69,7 @@ You can also add it manually by editing your project's `Packages/manifest.json`:
 1. Add the **Action Flow Component** to a GameObject.
 2. Choose how it triggers: `PlayOnStart`, `PlayOnEnable`, or `PlayOnActionCallback` (fired from your own code).
 3. Add one or more action flows and configure their timing.
-4. (Optional) Assign **Reset Targets** to snapshot and restore their transforms before each run.
-5. Enter Play Mode, or call `StartExecution()` from a script when using the callback mode.
+4. Enter Play Mode, or call `StartExecution()` from a script when using the callback mode.
 
 ```csharp
 // Trigger manually from code
@@ -143,6 +142,10 @@ Also in 2.0:
   `UnscaledUpdate` or `FixedUpdate` no longer falls back to scaled `Update` time for its delays.
 - Stopping is driven by a `CancellationToken` instead of `StopCoroutine`. As with coroutines,
   cancellation takes effect at the next suspension point.
+- **The reset-pose feature was removed** (2.0.1). `ActionFlowComponent` no longer has
+  **Reset Before Execution** / **Reset Targets**, and `CacheResetPose()` / `RestoreCachedPose()`
+  are gone. Restore the starting pose from your own code, or with an action flow that animates
+  back to it.
 
 ## License
 

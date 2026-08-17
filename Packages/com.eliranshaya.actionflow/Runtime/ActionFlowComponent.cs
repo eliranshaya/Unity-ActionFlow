@@ -28,13 +28,12 @@ namespace Core
 
     public class ActionFlowComponent : MonoBehaviour
     {
-        [SerializeField] private ActionFlowSettings _actionFlowSettings;
+        [SerializeField]
+        private ActionFlowSettings _actionFlowSettings;
         public ActionFlowSettings ActionFlowSettings => _actionFlowSettings;
 
-        [SerializeReference] public ActionFlow[] ActionFlows;
-
-        [SerializeField] private bool _resetBeforeExecution = true;
-        [SerializeField] private Transform[] _resetTargets;
+        [SerializeReference]
+        public ActionFlow[] ActionFlows;
 
         private Action _onStartCallback;
         private Action _onEnableCallback;
@@ -42,11 +41,8 @@ namespace Core
         private CancellationTokenSource _cts;
         private bool _isExecuting = false;
 
-        private Vector3[] _cachedLocalPositions;
-        private Quaternion[] _cachedLocalRotations;
-        private Vector3[] _cachedLocalScales;
-
-        [SerializeField] private bool _calculateTotalDuration = false;
+        [SerializeField]
+        private bool _calculateTotalDuration = false;
         private float _totalDuration;
         public float TotalDuration
         {
@@ -64,8 +60,6 @@ namespace Core
 
         private void Awake()
         {
-            CacheResetPose();
-
             if (_calculateTotalDuration)
             {
                 _totalDuration = CalculateTotalDuration();
@@ -131,11 +125,6 @@ namespace Core
         {
             StopExecution();
 
-            if (_resetBeforeExecution)
-            {
-                RestoreCachedPose();
-            }
-
             if (overrides != null)
             {
                 foreach (var o in overrides)
@@ -151,64 +140,9 @@ namespace Core
             RunAsync(onComplete, _cts.Token).Forget();
         }
 
-        public void CacheResetPose()
-        {
-            int targetCount = _resetTargets != null ? _resetTargets.Length : 0;
-
-            _cachedLocalPositions = new Vector3[targetCount];
-            _cachedLocalRotations = new Quaternion[targetCount];
-            _cachedLocalScales = new Vector3[targetCount];
-
-            for (int i = 0; i < targetCount; i++)
-            {
-                Transform resetTarget = _resetTargets[i];
-                if (resetTarget == null)
-                {
-                    continue;
-                }
-
-                _cachedLocalPositions[i] = resetTarget.localPosition;
-                _cachedLocalRotations[i] = resetTarget.localRotation;
-                _cachedLocalScales[i] = resetTarget.localScale;
-            }
-        }
-
-        public void RestoreCachedPose()
-        {
-            if (_resetTargets == null ||
-                _cachedLocalPositions == null ||
-                _cachedLocalRotations == null ||
-                _cachedLocalScales == null)
-            {
-                Debug.LogWarning($"{name}: No reset pose cached. Make sure Reset Targets are assigned before Play Mode starts.");
-                return;
-            }
-
-            int targetCount = Mathf.Min(
-                _resetTargets.Length,
-                _cachedLocalPositions.Length,
-                _cachedLocalRotations.Length,
-                _cachedLocalScales.Length
-            );
-
-            for (int i = 0; i < targetCount; i++)
-            {
-                Transform resetTarget = _resetTargets[i];
-                if (resetTarget == null)
-                {
-                    continue;
-                }
-
-                resetTarget.localPosition = _cachedLocalPositions[i];
-                resetTarget.localRotation = _cachedLocalRotations[i];
-                resetTarget.localScale = _cachedLocalScales[i];
-            }
-        }
-
         public void ResetAnimationTargets()
         {
             StopExecution();
-            RestoreCachedPose();
         }
 
         public void OverrideActionFlow(params ActionFlowOverride[] overrides)
@@ -285,11 +219,8 @@ namespace Core
                     {
                         if (_actionFlowSettings.DelayBetweenRepeats > 0f)
                         {
-                            await UniTask.Delay(
-                                TimeSpan.FromSeconds(_actionFlowSettings.DelayBetweenRepeats),
-                                DelayType.DeltaTime,
-                                PlayerLoopTiming.Update,
-                                cancellationToken);
+                            await UniTask.Delay(TimeSpan.FromSeconds(_actionFlowSettings.DelayBetweenRepeats),
+                                DelayType.DeltaTime, PlayerLoopTiming.Update, cancellationToken);
                         }
                     }
                 }

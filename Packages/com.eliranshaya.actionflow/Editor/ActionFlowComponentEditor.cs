@@ -13,8 +13,6 @@ namespace Core
         private ActionFlowComponent _component;
         private SerializedProperty _actionFlowSettingsProperty;
         private SerializedProperty _actionFlowsProperty;
-        private SerializedProperty _resetBeforeExecutionProperty;
-        private SerializedProperty _resetTargetsProperty;
 
         private int _draggingIndex = -1;
         private int _dragTargetIndex = -1;
@@ -25,8 +23,6 @@ namespace Core
             _component = (ActionFlowComponent)target;
             _actionFlowSettingsProperty = serializedObject.FindProperty("_actionFlowSettings");
             _actionFlowsProperty = serializedObject.FindProperty("ActionFlows");
-            _resetBeforeExecutionProperty = serializedObject.FindProperty("_resetBeforeExecution");
-            _resetTargetsProperty = serializedObject.FindProperty("_resetTargets");
         }
 
         public override void OnInspectorGUI()
@@ -38,9 +34,6 @@ namespace Core
 
             EditorGUILayout.Space(5);
             DrawTotalDurationField();
-
-            EditorGUILayout.Space(5);
-            DrawResetSettings();
 
             EditorGUILayout.Space(10);
 
@@ -445,15 +438,6 @@ namespace Core
                     }
                 }
 
-                GUI.backgroundColor = new Color(0.5f, 0.7f, 1f);
-                if (GUILayout.Button("↺ Reset", GUILayout.Width(100), GUILayout.Height(30)))
-                {
-                    if (Application.isPlaying)
-                    {
-                        _component.ResetAnimationTargets();
-                    }
-                }
-
                 GUI.backgroundColor = Color.white;
 
                 GUILayout.FlexibleSpace();
@@ -468,17 +452,6 @@ namespace Core
                 EditorGUILayout.HelpBox("Enter Play Mode to preview ActionFlows.",
                     MessageType.Warning);
             }
-        }
-
-        private void DrawResetSettings()
-        {
-            if (_resetBeforeExecutionProperty == null || _resetTargetsProperty == null)
-            {
-                return;
-            }
-
-            EditorGUILayout.PropertyField(_resetBeforeExecutionProperty, new GUIContent("Reset Before Execution"));
-            EditorGUILayout.PropertyField(_resetTargetsProperty, new GUIContent("Reset Targets"), true);
         }
 
         private void DrawSeparatorLine()
